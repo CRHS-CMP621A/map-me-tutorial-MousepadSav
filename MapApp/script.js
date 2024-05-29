@@ -32,16 +32,43 @@ class Workout {
 }
 
 class Running extends Workout {
+    type = 'running'
+
     constructor(coords, distance, duration, cadence) {
         super(coords, distance, duration);
         this.cadence = cadence;
+        this.calcPace();
+        this.setDescription()
     }
+
+    calcPace() {
+        this.pace = this.duration / this.distance
+        return this.pace
+    }
+
+    setDescription() {
+        this.description = `Running on ${this.date.toDateString()}`
+    }
+
 }
 
 class Cycling extends Workout {
+    type = `cycling`
+
     constructor(coords, distance, duration, elevationGain) {
         super(coords, distance, duration);
         this.elevation = elevationGain;
+        this.calcSpeed()
+        this.setDescription()
+    }
+
+    calcSpeed() {
+        this.speed = this.duration / this.distance
+        return this.speed
+    }
+
+    setDescription() {
+        this.description = `Cycling on ${this.date.toDateString()}`
     }
 }
 
@@ -65,6 +92,13 @@ navigator.geolocation.getCurrentPosition(
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
+        const data = JSON.parse(localStorage.getItem("workouts"))
+
+        if (data) {
+            workouts = data;
+            console.log(data)
+        }
+
         L.marker(coords).addTo(map)
             .bindPopup('A pretty CSS popup.<br> Easily customizable.')
             .openPopup();
@@ -83,6 +117,22 @@ navigator.geolocation.getCurrentPosition(
         alert('Could not get position.');
     }
 );
+
+
+containerWorkouts.addEventListener('click', function (e) {
+    const workoutEL = e.target.closet('.workout')
+    if (!workoutEL) return
+    const workout = workouts.find((work) => work.id === workoutEL.dataset.id)
+    map.setView(workout.coords, 13, {
+        animate: true,
+        pan: {
+            duration: 1,
+        },
+    })
+})
+
+
+
 
 // form event listener to check if submitted/completed
 form.addEventListener('submit', function (e) {
@@ -103,6 +153,7 @@ form.addEventListener('submit', function (e) {
 
         workout = new Running([lat, lng], distance, duration, cadence)
         workouts.push(workout)
+        localStorage.setItem('workouts', JSON.stringify(workouts))
     }
 
     if (type == 'cycling') {
@@ -111,7 +162,98 @@ form.addEventListener('submit', function (e) {
         workout = new Cycling([lat, lng], distance, duration, elevation)
         workouts.push(workout)
         console.log(workouts)
+        localStorage.setItem('workouts', JSON.stringify(workouts))
     }
+
+
+    let html;
+    for (let workout of workouts) {
+        let lat = workout.coords[0];
+        let lng = workout.coords[1];
+    }
+
+
+    if (type === `running`) {
+        html = `<li class="workout workout--running" data-id=${workout.id}>
+        <h2 class="workout__title">${workout.description}</h2>
+        <div class="workout__details">
+          <span class="workout__icon">🏃‍♂️</span>
+          <span class="workout__value">${workout.distance}</span>
+          <span class="workout__unit">km</span>
+        </div>
+        <div class="workout__details">
+          <span class="workout__icon">⏱</span>
+          <span class="workout__value">${workout.duration}</span>
+          <span class="workout__unit">min</span>
+        </div>
+        <div class="workout__details">
+          <span class="workout__icon">⚡️</span>
+          <span class="workout__value">${workout.pace}</span>
+          <span class="workout__unit">min/km</span>
+        </div>
+        <div class="workout__details">
+          <span class="workout__icon">🦶🏼</span>
+          <span class="workout__value">${workout.cadence}</span>
+          <span class="workout__unit">spm</span>
+        </div>
+      </li>`
+
+        L.marker([lat, lng])
+            .addTo(map)
+            .bindPopup(
+                L.popup({
+                    maxWidth: 250,
+                    minWidth: 100,
+                    autoClose: false,
+                    closeOnClick: false,
+                    classNameL: 'running-popup'
+                })
+            )
+            .setPopupContent('workout')
+            .openPopup()
+
+
+    } else if (type === `cycling`) {
+        html = `<li class="workout workout--cycling" data-id=${workout.id}>
+        <h2 class="workout__title">${workout.description}</h2>
+        <div class="workout__details">
+        <span class="workout__icon">🚴‍♀️</span>
+        <span class="workout__value">${workout.distance}</span>
+        <span class="workout__unit">km</span>
+  </div>
+  <div class="workout__details">
+    <span class="workout__icon">⏱</span>
+    <span class="workout__value">${workout.duration}</span>
+    <span class="workout__unit">min</span>
+  </div>
+  <div class="workout__details">
+    <span class="workout__icon">⚡️</span>
+    <span class="workout__value">${workout.speed}</span>
+    <span class="workout__unit">km/h</span>
+  </div>
+  <div class="workout__details">
+    <span class="workout__icon">⛰</span>
+    <span class="workout__value">${workout.elevation}</span>
+    <span class="workout__unit">m</span>
+  </div>
+</li>`
+
+        L.marker([lat, lng])
+            .addTo(map)
+            .bindPopup(
+                L.popup({
+                    maxWidth: 250,
+                    minWidth: 100,
+                    autoClose: false,
+                    closeOnClick: false,
+                    classNameL: 'cycling-popup'
+                })
+            )
+            .setPopupContent('workout')
+            .openPopup()
+    }
+    console.log(html)
+    form.insertAdjacentHTML('afterend', html)
 
     console.log(mapEvent)
 
@@ -125,9 +267,12 @@ form.addEventListener('submit', function (e) {
         }))
         .setPopupContent('Workout')
         .openPopup();
+    if (inputType.value == 'cycling') {
+        inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
+        inputElevation.closest('.form__row').classList.toggle('form__row--hidden');
+    }
     form.reset()
-    inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
-    inputElevation.closest('.form__row').classList.toggle('form__row--hidden');
+
 })
 
 //Event Listener Toggle form input type change. 
