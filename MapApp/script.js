@@ -100,7 +100,7 @@ navigator.geolocation.getCurrentPosition(
         }
 
         L.marker(coords).addTo(map)
-            .bindPopup('A pretty CSS popup.<br> Easily customizable.')
+            .bindPopup('Your Location')
             .openPopup();
 
         map.on('click', function (mapE) {
@@ -188,7 +188,7 @@ form.addEventListener('submit', function (e) {
         </div>
         <div class="workout__details">
           <span class="workout__icon">⚡️</span>
-          <span class="workout__value">${workout.pace}</span>
+          <span class="workout__value">${workout.pace.toFixed(1)}</span>
           <span class="workout__unit">min/km</span>
         </div>
         <div class="workout__details">
@@ -228,7 +228,7 @@ form.addEventListener('submit', function (e) {
   </div>
   <div class="workout__details">
     <span class="workout__icon">⚡️</span>
-    <span class="workout__value">${workout.speed}</span>
+    <span class="workout__value">${workout.speed.toFixed(1)}</span>
     <span class="workout__unit">km/h</span>
   </div>
   <div class="workout__details">
@@ -249,7 +249,7 @@ form.addEventListener('submit', function (e) {
                     classNameL: 'cycling-popup'
                 })
             )
-            .setPopupContent('workout')
+            .setPopupContent(workout.description)
             .openPopup()
     }
     console.log(html)
@@ -265,7 +265,7 @@ form.addEventListener('submit', function (e) {
             closeOnClick: false,
             className: 'running-popup',
         }))
-        .setPopupContent('Workout')
+        .setPopupContent(workout.description)
         .openPopup();
     if (inputType.value == 'cycling') {
         inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
